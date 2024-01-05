@@ -1,11 +1,14 @@
-~~Conway's~~ Manuel's game of life. <br><br>
+Manuel's ~~Fully functional Boids~~ Game of throwing disks. <br> Pauses and resumes with flabbergasting splendeur and precision, by pressing either p or space. <br><br>
 
-![image](https://github.com/suarezmanuel/GameOfLife/assets/146821569/be53c4b4-2fdb-4a7e-9203-d578e2a7a8cf)
+<img width="451" alt="image" src="https://github.com/suarezmanuel/Boids/assets/146821569/489f33c6-b956-4a5e-94f7-797837db7676"> <br><br>
 
-after p or space are pressed:  <br><br>
+The disks have been engrained with a complex network of deep human emotions, slothness being the most prominent. <br>
+Mixed together with a sprinkle of freewill, such that they opt not to move. <br>
+Very human-like indeed. <br><br>
 
-![image](https://github.com/suarezmanuel/GameOfLife/assets/146821569/73f98b73-48eb-4712-ac16-e6c7ca3cee38)
+<img width="451" alt="image" src="https://github.com/suarezmanuel/Boids/assets/146821569/dfd31aba-7c4e-426e-b338-9a83396742e6"> <br><br>
+<img width="452" alt="image" src="https://github.com/suarezmanuel/Boids/assets/146821569/7c647ad5-dc9f-4ab2-a089-ce7cf802779c"> <br><br>
 
-Truly, a wild game <br><br>
-
-![image](https://github.com/suarezmanuel/GameOfLife/assets/146821569/b067f4b0-fee0-40e3-b132-045b27e69a2b)
+You can adjust the velocity vectors by holding a mouse key and pressing the other to stop, after clicking in order to add the "birds". <br>
+SPOILER: They are supposed to be birds. you may need to squinch your eyes, tilt your head, and step back around 20 feet in order to see it. <br><br>
+The deletion only takes place after resuming the game
