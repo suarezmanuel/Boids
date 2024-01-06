@@ -30,7 +30,7 @@ void stepAll () {
 void drawPieces (SDL_Renderer *&renderer) {
     for (Bord& b : Bords) {
         b.drawBord(renderer);
-        std::cout << b.getDirVector()[0] << " " << b.getDirVector()[1] << std::endl;
+        // std::cout << b.getDirVector()[0] << " " << b.getDirVector()[1] << std::endl;
     }
 }
 
@@ -103,11 +103,12 @@ int main (int argc, char* argv[]) {
     int clickState;
     float tickTime = 0.02;
     int currX = 0, currY = 0;
+    int prev = 0;
     // needs to be a ptr if we want to use it for everyone while we pass references
     Bord* currBord = new Bord(vector, mouse);
 
     enum clicks {
-        LCLICK=1, MCLICK, IDK, RCLICK
+        LCLICK=1, MCLICK, IDK, RCLICK, LRCLICK
     };
 
     while (running) {
@@ -129,37 +130,71 @@ int main (int argc, char* argv[]) {
                         SDL_GetMouseState(&currX, &currY);
                         vector[0] = currX - currBord->getCenter()[0];
                         vector[1] = currY - currBord->getCenter()[1];
+                        // std::cout << Bords[0].getDirVector()[0] << " " << Bords[0].getDirVector()[1] << std::endl;
+                        // std::cout << vector[0] << " " << vector[1] << std::endl;
                         currBord->setDirVector(vector);
+                        // std::cout << Bords[0].getDirVector()[0] << " " << Bords[0].getDirVector()[1] << std::endl;
+
                         SDL_SetRenderDrawColor(renderer,255,100,50, 255);
                         SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1],
                         currX, currY);
                     }
                     break;
                 case SDL_MOUSEBUTTONDOWN: {
-                    // it only does this once
-                    // when mouse is pressed, mouse pos is {0,0}
-                    // clickState holds which mouse button was pressed
-                    clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
-                    lClick = (clickState == LCLICK);
-                    rClick = (clickState == RCLICK);
-                    hold = (lClick || rClick);  
-                    vector[0] = mouse[0]; vector[1] = mouse[1];
-                    currBord->setCenter(mouse);
-                    // pushback performs a move operator, such that there's no copy involved.
-                    Bords.push_back(*currBord);
-                }
-                    
+                        
+                        // it only does this once
+                        // when mouse is pressed, mouse pos is {0,0}
+                        // clickState holds which mouse button was pressed
+                        clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
+                        std::cout << clickState << std::endl;
+                        // this ternary if is used to not override prev click, e.g. holding left and clicking right
 
+                        // assuming you can't click both at the same time,
+                        // such that first you click one and then the other
+                        
+                        // lClick = !lClick ? clickState == LCLICK : lClick;
+                        // rClick = !rClick ? clickState == RCLICK : rClick;
+                        lClick = clickState == LCLICK;
+                        rClick = clickState == RCLICK;
+                        if (lClick) {
+                            std::cout << "left";
+                            vector[0] = mouse[0]; vector[1] = mouse[1];
+                            currBord->setCenter(mouse);
+                            Bords.push_back(*currBord);
+                        } if (rClick) {
+                            std::cout << "right";
+                        }
+                        std::cout << "down" << std::endl;
+                        hold = (lClick || rClick);  
+                        // pushback performs a move operator, such that there's no copy involved.
+                        
+                    }
                     break;
                 case SDL_MOUSEBUTTONUP: {
-                    std::cout << "up" << std::endl;
-                    // same vector as defined by mouse
-                    lClick = rClick = hold = false;
-                    vector[0] = vector[1] = 0;
-                    // as the vector is of objects passed by ref,
-                    // we shouldn't delete the ptr before restarting it.
-                    // Bords are automatically deleted
-                    currBord = new Bord(vector, mouse);
+                    std::cout << "true 1" << std::endl;
+                    // i don't want other mouse buttons to interfere
+                    if (SDL_GetMouseState(NULL, NULL) == RCLICK || SDL_GetMouseState(NULL, NULL) == LCLICK || lClick || rClick) {
+                        std::cout << "true 2" << std::endl;
+                        // if rClick is being held right now
+                        if (SDL_GetMouseState(NULL, NULL) == RCLICK || lClick) {
+                            std::cout << "left up" << std::endl;
+                            // same vector as defined by mouse
+                            lClick = false;
+                            // both buttons can be down at the same time
+                            if (!rClick && !SDL_GetMouseState(NULL, NULL) == RCLICK) {std::cout << "hold false" << std::endl; hold = false;}
+                            vector[0] = vector[1] = 0;
+                            // as the vector is of objects passed by ref,
+                            // we shouldn't delete the ptr before restarting it.
+                            // Bords are automatically deleted
+                            currBord = new Bord(vector, mouse);
+
+                        } else if (SDL_GetMouseState(NULL, NULL) == LCLICK || rClick) {
+                            std::cout << "right up" << std::endl;
+                            rClick = false;
+                            // both buttons can be down at the same time
+                            if (!lClick && !SDL_GetMouseState(NULL, NULL) == LCLICK) {std::cout << "hold false" << std::endl; hold = false;}
+                        } 
+                    }
                 }
                     break;
                 case SDL_KEYDOWN:
@@ -172,7 +207,6 @@ int main (int argc, char* argv[]) {
                     // if pause was already pressed then stop
                     // if it wasn't then start. This is represented by XOR
 
-                    // must wait atleast 0.1 seconds between pauses
                     break;
                 case SDL_KEYUP:
                     state = nullptr;
