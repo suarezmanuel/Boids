@@ -31,6 +31,9 @@ void Bord::drawBord (SDL_Renderer *&renderer) {
 void Bord::step () {
     center[0] += dirVector[0];
     center[1] += dirVector[1];
+
+    box.x += dirVector[0];
+    box.y += dirVector[1];
 }
 
 bool Bord::isPointInBord (int (&point) [2]) {

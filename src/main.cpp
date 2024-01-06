@@ -115,25 +115,26 @@ int main (int argc, char* argv[]) {
                 case SDL_QUIT:
                     running = false;
                     break;
-                case SDL_MOUSEBUTTONDOWN:
-                    // when mouse is pressed, mouse pos is {0,0}
-                    if (!(rClick || lClick)) {
-                        clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
-                        vector[0] = mouse[0]; vector[1] = mouse[1];
-                        hold = true;
-                    }
-
-                    if (hold) {
+                case SDL_MOUSEMOTION:
+                    if (hold && lClick) {
+                        std::cout << "moving vector" << std::endl;
                         SDL_GetMouseState(&currX, &currY);
                         vector[0] = currX - mouse[0];
                         vector[1] = currY - mouse[1];
                     }
-
+                    break;
+                case SDL_MOUSEBUTTONDOWN:
+                    // it only does this once
+                    // when mouse is pressed, mouse pos is {0,0}
                     // clickState holds which mouse button was pressed
+                    clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
                     lClick = (clickState == LCLICK);
                     rClick = (clickState == RCLICK);
+                    hold = (lClick || rClick);  
+                    vector[0] = mouse[0]; vector[1] = mouse[1];
                     break;
                 case SDL_MOUSEBUTTONUP:
+                    std::cout << "up" << std::endl;
                     lClick = rClick = hold = false;
                     break;
                 case SDL_KEYDOWN:
@@ -160,12 +161,10 @@ int main (int argc, char* argv[]) {
         // favourably you can tune the speed vector, strech it and turn it 
         if (pause && (lClick || rClick)) {
 
-            enum coords {X, Y};
-            // std::cout << mouse[0] << " " << mouse[1] << std::endl;
+            // std::cout << Bords.size() << std::endl;
 
-            // create Bord
             if (lClick) {
-                // same vector as last time
+                // same vector as defined by mouse
                 Bord bord(vector, mouse); 
                 Bords.push_back(bord);
             }
