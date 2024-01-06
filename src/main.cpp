@@ -30,6 +30,7 @@ void stepAll () {
 void drawPieces (SDL_Renderer *&renderer) {
     for (Bord& b : Bords) {
         b.drawBord(renderer);
+        std::cout << b.getDirVector()[0] << " " << b.getDirVector()[1] << std::endl;
     }
 }
 
@@ -102,12 +103,18 @@ int main (int argc, char* argv[]) {
     int clickState;
     float tickTime = 0.02;
     int currX = 0, currY = 0;
+    // needs to be a ptr if we want to use it for everyone while we pass references
+    Bord* currBord = new Bord(vector, mouse);
 
     enum clicks {
         LCLICK=1, MCLICK, IDK, RCLICK
     };
 
     while (running) {
+        
+        // draw black background
+        SDL_SetRenderDrawColor(renderer,0,0,0,255);
+        SDL_RenderClear(renderer);
 
         if (SDL_PollEvent(&windowEvent)) {
             
@@ -117,13 +124,18 @@ int main (int argc, char* argv[]) {
                     break;
                 case SDL_MOUSEMOTION:
                     if (hold && lClick) {
+                        
                         std::cout << "moving vector" << std::endl;
                         SDL_GetMouseState(&currX, &currY);
-                        vector[0] = currX - mouse[0];
-                        vector[1] = currY - mouse[1];
+                        vector[0] = currX - currBord->getCenter()[0];
+                        vector[1] = currY - currBord->getCenter()[1];
+                        currBord->setDirVector(vector);
+                        SDL_SetRenderDrawColor(renderer,255,100,50, 255);
+                        SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1],
+                        currX, currY);
                     }
                     break;
-                case SDL_MOUSEBUTTONDOWN:
+                case SDL_MOUSEBUTTONDOWN: {
                     // it only does this once
                     // when mouse is pressed, mouse pos is {0,0}
                     // clickState holds which mouse button was pressed
@@ -132,10 +144,23 @@ int main (int argc, char* argv[]) {
                     rClick = (clickState == RCLICK);
                     hold = (lClick || rClick);  
                     vector[0] = mouse[0]; vector[1] = mouse[1];
+                    currBord->setCenter(mouse);
+                    // pushback performs a move operator, such that there's no copy involved.
+                    Bords.push_back(*currBord);
+                }
+                    
+
                     break;
-                case SDL_MOUSEBUTTONUP:
+                case SDL_MOUSEBUTTONUP: {
                     std::cout << "up" << std::endl;
+                    // same vector as defined by mouse
                     lClick = rClick = hold = false;
+                    vector[0] = vector[1] = 0;
+                    // as the vector is of objects passed by ref,
+                    // we shouldn't delete the ptr before restarting it.
+                    // Bords are automatically deleted
+                    currBord = new Bord(vector, mouse);
+                }
                     break;
                 case SDL_KEYDOWN:
                     state = SDL_GetKeyboardState(nullptr);
@@ -161,14 +186,7 @@ int main (int argc, char* argv[]) {
         // favourably you can tune the speed vector, strech it and turn it 
         if (pause && (lClick || rClick)) {
 
-            // std::cout << Bords.size() << std::endl;
-
-            if (lClick) {
-                // same vector as defined by mouse
-                Bord bord(vector, mouse); 
-                Bords.push_back(bord);
-            }
-
+            // this one is outside keyevent, such that we can delete a lot by holding
             if (rClick) {
                 removeBordOnCursor(mouse);
             }
@@ -181,7 +199,7 @@ int main (int argc, char* argv[]) {
             stepAll();
         }
         
-
+        
         // draw grid on screen
         SDL_Color gridColor{70,70,40,255};
         drawGrid(renderer, gridColor);
@@ -194,10 +212,11 @@ int main (int argc, char* argv[]) {
         // it is not shown backwards, all changes to render are buffered
         SDL_RenderPresent(renderer);
 
-        if (!pause) {
-            SDL_SetRenderDrawColor(renderer,0,0,0,255);
-            SDL_RenderClear(renderer);
-        }
+        
+        // if (!pause) {
+        //     SDL_SetRenderDrawColor(renderer,0,0,0,255);
+        //     SDL_RenderClear(renderer);
+        // }
     }
     
     SDL_DestroyRenderer(renderer);
