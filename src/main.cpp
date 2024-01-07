@@ -139,6 +139,8 @@ int main (int argc, char* argv[]) {
                         SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1],
                         currX, currY);
                     }
+                    std::cout << "lclick " << lClick << std::endl;
+                    std::cout << "rclick " << rClick << std::endl;
                     break;
                 case SDL_MOUSEBUTTONDOWN: {
                         
@@ -152,16 +154,18 @@ int main (int argc, char* argv[]) {
                         // assuming you can't click both at the same time,
                         // such that first you click one and then the other
                         
-                        // lClick = !lClick ? clickState == LCLICK : lClick;
-                        // rClick = !rClick ? clickState == RCLICK : rClick;
-                        lClick = clickState == LCLICK;
-                        rClick = clickState == RCLICK;
-                        if (lClick) {
+                        //allows for lclick and rclick to both be on, and not overwrite eachother
+                        lClick = !lClick ? clickState == LCLICK || clickState == LRCLICK : lClick;
+                        rClick = !rClick ? clickState == RCLICK || clickState == LRCLICK : rClick;
+                        // lClick = clickState == LCLICK;
+                        // rClick = clickState == RCLICK;
+                        if (lClick && !rClick) {
                             std::cout << "left";
                             vector[0] = mouse[0]; vector[1] = mouse[1];
                             currBord->setCenter(mouse);
                             Bords.push_back(*currBord);
                         } if (rClick) {
+                            // rClick only works on pause
                             std::cout << "right";
                         }
                         std::cout << "down" << std::endl;
@@ -171,28 +175,34 @@ int main (int argc, char* argv[]) {
                     }
                     break;
                 case SDL_MOUSEBUTTONUP: {
+                    int mouseState = SDL_GetMouseState(NULL, NULL);
                     std::cout << "true 1" << std::endl;
+                    std::cout << mouseState << std::endl;
+                    std::cout << lClick << std::endl;
+                    
                     // i don't want other mouse buttons to interfere
-                    if (SDL_GetMouseState(NULL, NULL) == RCLICK || SDL_GetMouseState(NULL, NULL) == LCLICK || lClick || rClick) {
+                    if (mouseState == RCLICK || mouseState == LCLICK || lClick || rClick) {
                         std::cout << "true 2" << std::endl;
                         // if rClick is being held right now
-                        if (SDL_GetMouseState(NULL, NULL) == RCLICK || lClick) {
+                        if (mouseState == RCLICK || lClick) {
                             std::cout << "left up" << std::endl;
                             // same vector as defined by mouse
                             lClick = false;
                             // both buttons can be down at the same time
-                            if (!rClick && !SDL_GetMouseState(NULL, NULL) == RCLICK) {std::cout << "hold false" << std::endl; hold = false;}
+                            // if (!rClick && SDL_GetMouseState(NULL, NULL) == RCLICK) {std::cout << "hold false" << std::endl; hold = false;}
+                            // i hope these don't change inside bord
                             vector[0] = vector[1] = 0;
                             // as the vector is of objects passed by ref,
                             // we shouldn't delete the ptr before restarting it.
                             // Bords are automatically deleted
+                            // we restart currBord
                             currBord = new Bord(vector, mouse);
 
-                        } else if (SDL_GetMouseState(NULL, NULL) == LCLICK || rClick) {
+                        } else if (mouseState == LCLICK || rClick) {
                             std::cout << "right up" << std::endl;
                             rClick = false;
                             // both buttons can be down at the same time
-                            if (!lClick && !SDL_GetMouseState(NULL, NULL) == LCLICK) {std::cout << "hold false" << std::endl; hold = false;}
+                            // if (!lClick && SDL_GetMouseState(NULL, NULL) == LCLICK) {std::cout << "hold false" << std::endl; hold = false;}
                         } 
                     }
                 }
@@ -221,7 +231,8 @@ int main (int argc, char* argv[]) {
         if (pause && (lClick || rClick)) {
 
             // this one is outside keyevent, such that we can delete a lot by holding
-            if (rClick) {
+            // if not both are clicked
+            if (rClick && !lClick) {
                 removeBordOnCursor(mouse);
             }
         }
