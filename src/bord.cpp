@@ -43,9 +43,9 @@ int* Bord::getDirVector () {
 }
 
 void Bord::setDirVector (int (&dirVector) [2]) {
+    std::cout << "blahblah " << dirVector[0] << " " << dirVector[1] << std::endl;
     std::copy(std::begin(dirVector), std::end(dirVector), std::begin(this->dirVector));
     // dirVector[0] = 0; dirVector[1] = 0;
-    // std::cout << dirVector[0] << " " << dirVector[1] << std::endl;
     // std::cout << this->dirVector[0] << " " << this->dirVector[1] << std::endl;
     // this->dirVector[0] = dirVector[0];
     // this->dirVector[1] = dirVector[1];
