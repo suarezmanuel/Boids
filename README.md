@@ -11,4 +11,10 @@ Very human-like indeed. <br><br>
 
 You can adjust the velocity vectors by holding a mouse key and pressing the other to stop, after clicking in order to add the "birds". <br>
 SPOILER: They are supposed to be birds. you may need to squinch your eyes, tilt your head, and step back around 20 feet in order to see it. <br><br>
-The deletion only takes place after resuming the game
+The deletion only takes place after resuming the game <br><br>
+
+UPDATE 2 <br>
+
+Manuel's vector space <br><br>
+
+![image](https://github.com/suarezmanuel/Boids/assets/146821569/5ccedd07-a225-464d-868a-c5e7f6bdb7c4)
