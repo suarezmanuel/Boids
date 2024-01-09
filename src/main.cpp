@@ -129,16 +129,14 @@ int main (int argc, char* argv[]) {
                     break;
                 case SDL_MOUSEMOTION:
 
-                    std::cout << "moved" << std::endl;
+                    // std::cout << "moved" << std::endl;
                     if (hold && lClick) {
                         // if we created a bord
                         if (currBord) {
                             // we only need the values when moving
-                            SDL_GetMouseState(&currX, &currY);
-                            vector[0] = currX - currBord->getCenter()[0];
-                            vector[1] = currY - currBord->getCenter()[1];
-                            // vector[0] = mouse[0] - currBord->getCenter()[0];
-                            // vector[1] = mouse[1] - currBord->getCenter()[1];
+                            SDL_GetMouseState(&mouse[0], &mouse[1]);
+                            vector[0] = mouse[0] - currBord->getCenter()[0];
+                            vector[1] = mouse[1] - currBord->getCenter()[1];
                             std::cout << vector[0] << ", " << vector[1] << std::endl;
                             // std::cout << Bords[0].getDirVector()[0] << ", " << Bords[0].getDirVector()[1] << std::endl;
                             currBord->setDirVector(vector);
@@ -149,18 +147,21 @@ int main (int argc, char* argv[]) {
                 case SDL_MOUSEBUTTONDOWN: {
                         
                         clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
-
+                        // std::cout << "click down pos: " << mouse[0] << ", " << mouse[1] << std::endl;
                         //allows for lclick and rclick to both be on, and not overwrite eachother
                         lClick = !lClick ? clickState == LCLICK || clickState == LRCLICK : lClick;
                         rClick = !rClick ? clickState == RCLICK || clickState == LRCLICK : rClick;
                         hold = (lClick || rClick);
                         
-                        /// TODO: these should work only on pause
-                        if (lClick && !rClick) {
+                        if (pause && lClick && !rClick) {
 
                             vector[0] = mouse[0]; vector[1] = mouse[1];
                             currBord = new Bord(vector, mouse);
+
                             if (currBord) {
+                                std::cout << currBord->getCenter[0] << 
+
+
                                 currBord->setCenter(mouse);
                                 // pushback performs copy
                                 Bords.push_back(currBord);
@@ -172,7 +173,7 @@ int main (int argc, char* argv[]) {
 
                     // will tell us whos still holdin
                     int mouseState = SDL_GetMouseState(NULL, NULL);
-                    std::cout << "mousestate" << mouseState << " lclick" << lClick << " rclick" << rClick << std::endl;
+                    // std::cout << "mousestate" << mouseState << " lclick" << lClick << " rclick" << rClick << std::endl;
                     bool lMakeFalse = false;
                     bool rMakeFalse = false;
 
@@ -234,15 +235,19 @@ int main (int argc, char* argv[]) {
 
         drawPieces(renderer);
 
-        
+        if (mouse[0] == 0 && mouse[1] == 0) {
+            SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
+        }
+
         if (currBord) {
             // render the line from mouse to bord.
             SDL_SetRenderDrawColor(renderer,255,100,50, 255);
-            SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], currX, currY);
-            // SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], mouse[0], mouse[1]);
+            SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], mouse[0], mouse[1]);
         }
         // it is not shown backwards, all changes to render are buffered
         SDL_RenderPresent(renderer);
+
+        mouse[0] = mouse[1] = 0;
     }
     
     SDL_DestroyRenderer(renderer);

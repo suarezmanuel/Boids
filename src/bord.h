@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <iostream>
 #include <algorithm>
 #include <iterator>
 #define BORDWIDTH 20
@@ -23,4 +22,6 @@ public:
     void setCenter (int (&center) [2]);
     // operator implemented for std::find to work (used in main.cpp)
     bool operator== (const Bord& other) const;
+    // needs to be a non-member, as the class puts 
+    friend std::ostream& operator<< (std::ostream& os, const Bord& b);
 };

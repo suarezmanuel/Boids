@@ -43,7 +43,7 @@ int* Bord::getDirVector () {
 }
 
 void Bord::setDirVector (int (&dirVector) [2]) {
-    std::cout << "blahblah " << dirVector[0] << " " << dirVector[1] << std::endl;
+    // std::cout << "blahblah " << dirVector[0] << " " << dirVector[1] << std::endl;
     std::copy(std::begin(dirVector), std::end(dirVector), std::begin(this->dirVector));
     // dirVector[0] = 0; dirVector[1] = 0;
     // std::cout << this->dirVector[0] << " " << this->dirVector[1] << std::endl;
@@ -73,6 +73,11 @@ bool Bord::operator== (const Bord& other) const {
     &&     dirVector[0] == other.dirVector[0] && dirVector[1] == other.dirVector[1]
     &&     center[0] == other.center[0] && center[1] == other.center[1]
     &&     r == other.r;
+}
+
+// TODO: print all info about bord
+std::ostream& operator<< (std::ostream& os, const Bord& b) {
+
 }
 
 //get vec size
