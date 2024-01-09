@@ -11,7 +11,8 @@
 #define BLOCKSONSCREENHEIGHT SCREENHEIGHT/BLOCKHEIGHT
 #define INTSIZE sizeof(int)
 
-std::vector<Bord> Bords;
+// we need references as pushback creates copies
+std::vector<Bord*> Bords;
 /*
     1. Separation
     2. Alignment
@@ -22,21 +23,21 @@ void enactGameRules () {
 }
 
 void stepAll () {
-    for (Bord& b : Bords) {
-        b.step();
+    for (Bord*& b : Bords) {
+        b->step();
     }
 }
 
 void drawPieces (SDL_Renderer *&renderer) {
-    for (Bord& b : Bords) {
-        b.drawBord(renderer);
+    for (Bord*& b : Bords) {
+        b->drawBord(renderer);
         // std::cout << b.getDirVector()[0] << " " << b.getDirVector()[1] << std::endl;
     }
 }
 
 void removeBordOnCursor (int (&mouse) [2]) {
-    for (Bord& b : Bords) {
-        if (b.isPointInBord(mouse)) {
+    for (Bord*& b : Bords) {
+        if (b->isPointInBord(mouse)) {
             // get iterator at b's index, in Bords
             auto iterator = std::find(Bords.begin(), Bords.end(), b);
             // remove b from Bords
@@ -60,7 +61,7 @@ void drawGrid (SDL_Renderer *renderer, SDL_Color color) {
     p1[X] = 0;
     p2[X] = SCREENWIDTH;
 
-    for (size_t i = 0; i < BLOCKSONSCREENHEIGHT; i++)
+    for (int i = 0; i < BLOCKSONSCREENHEIGHT; i++)
     {
         p1[Y] = p2[Y] = i*BLOCKHEIGHT;
 
@@ -72,7 +73,7 @@ void drawGrid (SDL_Renderer *renderer, SDL_Color color) {
     p1[Y] = 0;
     p2[Y] = SCREENHEIGHT;
     
-    for (size_t i = 0; i < BLOCKSONSCREENWIDTH; i++)
+    for (int i = 0; i < BLOCKSONSCREENWIDTH; i++)
     {
         p1[X] = p2[X] = i*BLOCKWIDTH;
 
@@ -106,7 +107,7 @@ int main (int argc, char* argv[]) {
     int prev = 0;
     bool renderCurrLine = false;
     // needs to be a ptr if we want to use it for everyone while we pass references
-    Bord* currBord = new Bord(vector, mouse);
+    Bord* currBord = nullptr;
 
     enum clicks {
         LCLICK=1, MCLICK, IDK, RCLICK, LRCLICK
@@ -118,6 +119,7 @@ int main (int argc, char* argv[]) {
         // draw black background
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
         SDL_RenderClear(renderer);
+        // clickState = SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
 
         if (SDL_PollEvent(&windowEvent)) {
             
@@ -129,16 +131,19 @@ int main (int argc, char* argv[]) {
 
                     std::cout << "moved" << std::endl;
                     if (hold && lClick) {
-                        
-                        // we need currX, currY for 
-                        SDL_GetMouseState(&currX, &currY);
-                        vector[0] = currX - currBord->getCenter()[0];
-                        vector[1] = currY - currBord->getCenter()[1];
-                        // std::cout << vector[0] << ", " << vector[1] << std::endl;
-                        // std::cout << Bords[0].getDirVector()[0] << ", " << Bords[0].getDirVector()[1] << std::endl;
-                        currBord->setDirVector(vector);
-                        // std::cout << Bords[0].getDirVector()[0] << ", " << Bords[0].getDirVector()[1] << std::endl;
-                        
+                        // if we created a bord
+                        if (currBord) {
+                            // we only need the values when moving
+                            SDL_GetMouseState(&currX, &currY);
+                            vector[0] = currX - currBord->getCenter()[0];
+                            vector[1] = currY - currBord->getCenter()[1];
+                            // vector[0] = mouse[0] - currBord->getCenter()[0];
+                            // vector[1] = mouse[1] - currBord->getCenter()[1];
+                            std::cout << vector[0] << ", " << vector[1] << std::endl;
+                            // std::cout << Bords[0].getDirVector()[0] << ", " << Bords[0].getDirVector()[1] << std::endl;
+                            currBord->setDirVector(vector);
+                            // std::cout << Bords[0].getDirVector()[0] << ", " << Bords[0].getDirVector()[1] << std::endl;
+                        }
                     }
                     break;
                 case SDL_MOUSEBUTTONDOWN: {
@@ -154,10 +159,12 @@ int main (int argc, char* argv[]) {
                         if (lClick && !rClick) {
 
                             vector[0] = mouse[0]; vector[1] = mouse[1];
-                            currBord->setCenter(mouse);
                             currBord = new Bord(vector, mouse);
-                            // pushback performs a move operator, such that there's no copy involved.
-                            Bords.push_back(*currBord);
+                            if (currBord) {
+                                currBord->setCenter(mouse);
+                                // pushback performs copy
+                                Bords.push_back(currBord);
+                            }
                         } if (rClick) { }
                     }
                     break;
@@ -196,14 +203,10 @@ int main (int argc, char* argv[]) {
                     break;
                 case SDL_KEYDOWN:
                     state = SDL_GetKeyboardState(nullptr);
+                    // pause if p or space, if presssed again stop
                     if (state) {
                         pause ^= state[SDL_SCANCODE_SPACE] || state[SDL_SCANCODE_P];
                     }
-
-                    // pause is true if either space or p are pressed.
-                    // if pause was already pressed then stop
-                    // if it wasn't then start. This is represented by XOR
-
                     break;
                 case SDL_KEYUP:
                     state = nullptr;
@@ -212,13 +215,11 @@ int main (int argc, char* argv[]) {
         }
 
 
-        if (pause && (lClick || rClick)) {
-            // this one is outside keyevent, such that we can delete a lot by holding
-            // if not both are clicked
-            if (rClick && !lClick) {
-                removeBordOnCursor(mouse);
-            }
-        }
+        if (!lClick && pause && hold && rClick) {
+            SDL_GetMouseState(&(mouse[0]), &(mouse[1]));
+            // delete a lot at once
+            removeBordOnCursor(mouse);
+        } 
 
         if (!pause) {
             // tickTime is in seconds, and Sleep gets MS
@@ -233,9 +234,13 @@ int main (int argc, char* argv[]) {
 
         drawPieces(renderer);
 
-        // render the line from mouse to bord.
-        SDL_SetRenderDrawColor(renderer,255,100,50, 255);
-        SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], currX, currY);
+        
+        if (currBord) {
+            // render the line from mouse to bord.
+            SDL_SetRenderDrawColor(renderer,255,100,50, 255);
+            SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], currX, currY);
+            // SDL_RenderDrawLine(renderer, currBord->getCenter()[0], currBord->getCenter()[1], mouse[0], mouse[1]);
+        }
         // it is not shown backwards, all changes to render are buffered
         SDL_RenderPresent(renderer);
     }
