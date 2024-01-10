@@ -18,3 +18,7 @@ UPDATE 2 <br>
 Manuel's vector space <br><br>
 
 ![image](https://github.com/suarezmanuel/Boids/assets/146821569/5ccedd07-a225-464d-868a-c5e7f6bdb7c4)
+
+<br><br>
+
+Next up: make rules for the game
