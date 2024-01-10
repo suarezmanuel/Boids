@@ -2,9 +2,9 @@
 #include "draw.h"
 
 // this weird arg sintax allows for getting arg as array and not as ptr
-Bord::Bord (int (&dirVector) [2], int (&center) [2]) {
+Bord::Bord (int (&vector) [2], int (&center) [2]) {
 
-    setDirVector(dirVector);
+    setVector(vector);
     setCenter(center);
 }
 
@@ -22,15 +22,15 @@ void Bord::drawBord (SDL_Renderer *&renderer) {
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
     // we need to add the center as it stems from the center
     SDL_RenderDrawLine(renderer, center[0], center[1], 
-    center[0] + dirVector[0], center[1] + dirVector[1]);
+    center[0] + vector[0], center[1] + vector[1]);
 }
 
 void Bord::step () {
-    center[0] += dirVector[0];
-    center[1] += dirVector[1];
+    center[0] += vector[0];
+    center[1] += vector[1];
 
-    box.x += dirVector[0];
-    box.y += dirVector[1];
+    box.x += vector[0];
+    box.y += vector[1];
 }
 
 bool Bord::isPointInBord (int (&point) [2]) {
@@ -38,18 +38,12 @@ bool Bord::isPointInBord (int (&point) [2]) {
     &&      box.y <= point[1] && point[1] <= box.y + box.h);
 }
 
-int* Bord::getDirVector () {
-    return dirVector;
+int* Bord::getVector () {
+    return vector;
 }
 
-void Bord::setDirVector (int (&dirVector) [2]) {
-    // std::cout << "blahblah " << dirVector[0] << " " << dirVector[1] << std::endl;
-    std::copy(std::begin(dirVector), std::end(dirVector), std::begin(this->dirVector));
-    // dirVector[0] = 0; dirVector[1] = 0;
-    // std::cout << this->dirVector[0] << " " << this->dirVector[1] << std::endl;
-    // this->dirVector[0] = dirVector[0];
-    // this->dirVector[1] = dirVector[1];
-    // std::cout << "vector updated " << dirVector[0] << " " << dirVector[1] << std::endl;
+void Bord::setVector (int (&vector) [2]) {
+    std::copy(std::begin(vector), std::end(vector), std::begin(this->vector));
 }
 
 int* Bord::getCenter () {
@@ -70,14 +64,16 @@ void Bord::setCenter (int (&center) [2]) {
 bool Bord::operator== (const Bord& other) const {
     // comparing height, width as maybe in the far future nature may allow different sized birds
     return box.h == other.box.h && box.w == other.box.w && box.x == other.box.x && box.y == other.box.y
-    &&     dirVector[0] == other.dirVector[0] && dirVector[1] == other.dirVector[1]
+    &&     vector[0] == other.vector[0] && vector[1] == other.vector[1]
     &&     center[0] == other.center[0] && center[1] == other.center[1]
     &&     r == other.r;
 }
 
 // TODO: print all info about bord
-std::ostream& operator<< (std::ostream& os, const Bord& b) {
-
+std::ostream& operator<< (std::ostream& os, Bord const & b) {
+    os << "bord center : " << b.center[0] << ", " << b.center[1] << std::endl;
+    os << "bord vector : " << b.vector[0] << ", " << b.vector[1] << std::endl;
+    return os;
 }
 
 //get vec size
