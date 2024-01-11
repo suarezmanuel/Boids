@@ -13,13 +13,24 @@
 
 // we need references as pushback creates copies
 std::vector<Bord*> Bords;
+std::vector<Bord*> BordsCopy;
 /*
     1. Separation
     2. Alignment
     3. Cohesion
 */
 void enactGameRules () {
+    // were gonna need two Bord Boards
     std::cout << "rules are rules" << std::endl;
+    // std::copy (Bords.begin(), Bords.end(), BordsCopy.begin());
+    BordsCopy = Bords;
+    for (Bord*& b : BordsCopy) {
+        b->cohesion(BordsCopy);
+        b->separation(BordsCopy);
+        b->alignment(BordsCopy);
+    }
+    Bords = BordsCopy;
+    // std::copy (BordsCopy.begin(), BordsCopy.end(), Bords.begin());
 }
 
 void stepAll () {
@@ -77,6 +88,54 @@ void drawGrid (SDL_Renderer *renderer, SDL_Color color) {
         p1[X] = p2[X] = i*BLOCKWIDTH;
 
         SDL_RenderDrawLine(renderer, p1[X], p1[Y], p2[X], p2[Y]);
+    }
+}
+
+// returns 1 for width oob, 2 for height oob, 3 for both.
+int checkBordOutOfBounds (Bord* b) {
+    if (!b) {return false;}
+
+    int *center = b->getCenter();
+    int oobW = (center[0] > SCREENWIDTH || center[0] < 0) ? 1 : 0;
+    int oobH = (center[1] > SCREENHEIGHT || center[1] < 0) ? 2 : 0;
+    return oobW + oobH;
+}
+
+void wrapAroundAll () {
+    int *vector;
+    int *center;
+    int newCenter[2];
+    int oob;
+    // bad idea, they are null
+    // newCenter[0] = center[0];
+    // newCenter[1] = center[1];
+    for (Bord* b : Bords) {
+        if (b && (oob = checkBordOutOfBounds(b))) {
+            vector = b->getVector();
+            center = b->getCenter();
+
+            newCenter[0] = center[0];
+            newCenter[1] = center[1];
+            // this is all supposing that b is moving in any direction
+            // too much right
+            if (oob == 1 || oob == 3) {
+                if (vector[0] > 0) {
+                    newCenter[0] = 0;
+                } else {
+                    newCenter[0] = SCREENWIDTH;
+                }
+            }
+            
+            if (oob == 2 || oob == 3) {
+                if (vector[1] > 0) {
+                    newCenter[1] = 0;
+                } else {
+                    newCenter[1] = SCREENHEIGHT;
+                }
+            }
+            
+            b->setCenter(newCenter);
+        }
     }
 }
 
@@ -215,6 +274,7 @@ int main (int argc, char* argv[]) {
             // tickTime is in seconds, and Sleep gets MS
             Sleep(tickTime*1000);
             enactGameRules();
+            wrapAroundAll();
             stepAll();
         }
         

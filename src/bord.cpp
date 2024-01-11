@@ -25,12 +25,14 @@ void Bord::drawBord (SDL_Renderer *&renderer) {
     center[0] + vector[0], center[1] + vector[1]);
 }
 
+// we don't want the vector drawn on the screen to be exactly the step each time,
+// we would want it to be less than that (half in here).
 void Bord::step () {
-    center[0] += vector[0];
-    center[1] += vector[1];
+    center[0] += vector[0] / REDUCTIONFACTOR;
+    center[1] += vector[1] / REDUCTIONFACTOR;
 
-    box.x += vector[0];
-    box.y += vector[1];
+    box.x += vector[0] / REDUCTIONFACTOR;
+    box.y += vector[1] / REDUCTIONFACTOR;
 }
 
 bool Bord::isPointInBord (int (&point) [2]) {
@@ -76,4 +78,125 @@ std::ostream& operator<< (std::ostream& os, Bord const & b) {
     return os;
 }
 
+float Bord::getPointsDistance (int *a, int *b) {
+    return sqrt(pow(a[0] - b[0], 2) + pow(a[1] - b[1], 2));
+}
+
+float Bord::getDistanceFromBord (Bord *other) {
+    return getPointsDistance(this->center, other->center);
+}
+
+float toRadians (float degree) {
+    return degree * M_PI / 180;
+}
 //get vec size
+float Bord::getVectorSize () {
+    return getPointsDistance(center, vector);
+}
+
+int Bord::getVectorAngle () {
+    return (int) atan(abs(center[1]-vector[1]) / abs(center[0]-vector[0]));
+}
+
+void Bord::setVector (int angle, float size) {
+    int y = size * sin(angle);
+    int x = size * cos(angle);
+}
+
+
+std::vector<Bord*> Bord::getNeighbors (std::vector<Bord*> Bords) {
+    std::vector<Bord*> neighbors;
+    for (Bord*& b : Bords) {
+        // an open set
+        if (b != this && getDistanceFromBord(b) < RADIUS) {
+            neighbors.push_back(b);
+        }
+    }
+    return neighbors;
+}
+
+float Bord::averageVectorSize (std::vector<Bord*> neighbors) {
+    float sumSizes = 0;
+    for (Bord*& b : neighbors) {
+        sumSizes += b->getVectorSize();
+    }
+    return sumSizes / neighbors.size();
+}
+
+int Bord::averageVectorAngle (std::vector<Bord*> neighbors) {
+    float sumAngles = 0;
+    for (Bord*& b : neighbors) {
+        sumAngles += b->getVectorAngle();
+    }
+    return sumAngles / neighbors.size();
+}
+
+int* Bord::averageCenter (std::vector<Bord*> neighbors) {
+    int centerSum [2] = {0, 0}, *center = nullptr;
+
+    for (Bord*& b : neighbors) {
+        center = b->getCenter();
+        centerSum[0] += center[0];
+        centerSum[1] += center[1];
+    }
+
+    int* avgCenter  = (int*) malloc (2 * sizeof(int));
+    avgCenter[0] = centerSum[0] / neighbors.size();
+    avgCenter[1] = centerSum[1] / neighbors.size();
+
+    return avgCenter;
+}
+
+bool Bord::checkVeryCloseNeighbor (std::vector<Bord*> Bords) {
+    std::vector<Bord*> neighbors = this->getNeighbors(Bords);
+    for (Bord*& b : Bords) {
+        // an open set
+        if (this->getDistanceFromBord(b) < MINPROX) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Bord::separation (std::vector<Bord*> Bords) {
+    // get avg of vectors to neighbors' centers, and negate it
+    int vectorSum [2] = {0, 0}, vectorToCenter[2];
+    // here we don't want ourself as neighbor
+    // if theres a very close neighbor
+    if (checkVeryCloseNeighbor(Bords)) {
+            for (Bord*& b : Bords) {
+                // vec to center of neighbor
+                vectorToCenter[0] = b->getCenter()[0] - center[0];
+                vectorToCenter[1] = b->getCenter()[1] - center[1];
+
+                vectorSum[0] += vectorToCenter[0];
+                vectorSum[1] += vectorToCenter[1];
+        }
+    }
+    
+    int avgVector [2] = {0,0};
+    avgVector[0] = vectorSum[0] / Bords.size();
+    avgVector[1] = vectorSum[1] / Bords.size();
+
+    // we don't a ref of this temp val we only want its value before its deletion
+    int separationVec [2] = {0,0};
+    separationVec[0] = -avgVector[0];
+    separationVec[1] = -avgVector[1];
+    setVector(separationVec);
+}
+
+void Bord::cohesion (std::vector<Bord*> Bords) {
+    // point to avg center
+    std::vector<Bord*> neighbors = this->getNeighbors(Bords);
+
+    int *avgCenter = averageCenter(neighbors);
+    int vectorToCenter[2] = {0, 0};
+    vectorToCenter[0] = avgCenter[0] - center[0]; 
+    vectorToCenter[1] = avgCenter[1] - center[1]; 
+    setVector(vectorToCenter);
+}
+
+void Bord::alignment (std::vector<Bord*> Bords) {
+    std::vector<Bord*> neighbors = this->getNeighbors(Bords);
+    setVector(averageVectorAngle(neighbors), averageVectorSize(neighbors));
+}
