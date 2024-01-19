@@ -14,6 +14,155 @@
 // we need references as pushback creates copies
 std::vector<Bord*> Bords;
 std::vector<Bord*> BordsCopy;
+
+
+
+
+
+std::vector<Bord*> getNeighbors (Bord *& b, std::vector<Bord*>& Bords) {
+    std::vector<Bord*> neighbors;
+    for (Bord*& bb : Bords) {
+        // an open set. We can be neighbors with ourselves, makes transitions smoother
+        if (bb->getDistanceFromBord(b) < RADIUS) {
+            std::cout << "new neighbor" << std::endl;
+            neighbors.push_back(bb);
+        }
+    }
+    return neighbors;
+}
+
+
+
+float averageVectorSize (std::vector<Bord*>& neighbors) {
+    if (neighbors.size() == 0) {
+        return 0;
+    }
+
+    float sumSizes = 0;
+    for (Bord*& b : neighbors) {
+        if (b) {
+            sumSizes += b->getVectorSize();
+        }
+    }
+    return sumSizes / neighbors.size();
+}
+
+
+
+int averageVectorAngle (std::vector<Bord*>& neighbors) {
+    if (neighbors.size() == 0) {
+        return 0;
+    }
+
+    float sumAngles = 0;
+    for (Bord*& b : neighbors) {
+        if (b) {
+            sumAngles += b->getVectorAngle();
+        }
+    }
+    
+    return sumAngles / neighbors.size();
+}
+
+
+
+
+int* averageCenter (std::vector<Bord*>& neighbors) {
+    if (neighbors.size() == 0) {
+        return 0;
+    }
+
+    int centerSum [2] = {0, 0}, *center = nullptr;
+
+    for (Bord*& b : neighbors) {
+        if (b) {
+            center = b->getCenter();
+            centerSum[0] += center[0];
+            centerSum[1] += center[1];
+        }
+    }
+
+    int* avgCenter  = (int*) malloc (2 * sizeof(int));
+    avgCenter[0] = centerSum[0] / neighbors.size();
+    avgCenter[1] = centerSum[1] / neighbors.size();
+
+    return avgCenter;
+}
+
+
+
+bool checkVeryCloseNeighbor (Bord*& b, std::vector<Bord*>& Bords) {
+    std::vector<Bord*> neighbors = getNeighbors(b, Bords);
+    for (Bord*& b : Bords) {
+        // an open set
+        if (b->getDistanceFromBord(b) < MINPROX) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
+
+void separation (Bord*& b, std::vector<Bord*>& neighbors) {
+
+    // get avg of vectors to neighbors' centers, and negate it
+    int vectorSum [2] = {0, 0}, vectorToCenter[2];
+    
+    // if theres a very close neighbor
+    if (checkVeryCloseNeighbor(b, neighbors)) {
+        for (Bord*& bb : neighbors) {
+            // here we don't want ourselves as neighbors
+            if (bb && bb != b) {
+                // vec to center of neighbor
+                vectorToCenter[0] = b->getCenter()[0] - bb->getCenter()[0];
+                vectorToCenter[1] = b->getCenter()[1] - bb->getCenter()[1];
+
+                vectorSum[0] += vectorToCenter[0];
+                vectorSum[1] += vectorToCenter[1];
+            }
+        }
+    }
+    
+    int avgVector [2] = {0,0};
+    avgVector[0] = vectorSum[0] / neighbors.size();
+    avgVector[1] = vectorSum[1] / neighbors.size();
+
+    // we don't a ref of this temp val we only want its value before its deletion
+    int separationVec [2] = {0,0};
+    separationVec[0] = -avgVector[0];
+    separationVec[1] = -avgVector[1];
+    b->setVector(separationVec);
+}
+
+
+
+
+void cohesion (Bord*& b, std::vector<Bord*>& neighbors) {
+
+    int *avgCenter = averageCenter(neighbors);
+    int vectorToCenter[2] = {0, 0};
+    vectorToCenter[0] = avgCenter[0] - b->getCenter()[0]; 
+    vectorToCenter[1] = avgCenter[1] - b->getCenter()[1]; 
+    b->setVector(vectorToCenter);
+    free(avgCenter);
+}
+
+void alignment (Bord*& b, std::vector<Bord*>& neighbors) {
+    std::cout << "inside alignment" << std::endl;
+    SDL_Color color = {255,0,0,255};
+    b->setColor (color);
+    // setVector(averageVectorAngle(neighbors), averageVectorSize(neighbors));
+    // std::cout << "after change " << std::endl;
+}
+
+
+
+
+
+
+
 /*
     1. Separation
     2. Alignment
@@ -25,11 +174,11 @@ void enactGameRules () {
     // BordsCopy = Bords;
     std::vector<Bord*> neighbors;
     for (Bord*& b : Bords) {
-        if (neighbors = b->getNeighbors(Bords); neighbors.size() > 0) {
+        if (neighbors = getNeighbors(b, Bords); neighbors.size() > 0) {
             // b->cohesion(neighbors);
             // b->separation(neighbors);
             // std::cout << *b << std::endl;
-            b->alignment(neighbors);
+            alignment(b, neighbors);
         }
     }
     // Bords = BordsCopy;

@@ -30,15 +30,15 @@ public:
     void setCenter (int (&center) [2]);
     float getVectorSize ();
     int getVectorAngle ();
-    float averageVectorSize (std::vector<Bord*>& neighbors);
-    int averageVectorAngle (std::vector<Bord*>& neighbors);
-    int* averageCenter (std::vector<Bord*>& neighbors);
-    bool checkVeryCloseNeighbor (std::vector<Bord*>& Bords);
-    std::vector<Bord*> getNeighbors (std::vector<Bord*>& Bords);
+    // float averageVectorSize (std::vector<Bord*>& neighbors);
+    // int averageVectorAngle (std::vector<Bord*>& neighbors);
+    // int* averageCenter (std::vector<Bord*>& neighbors);
+    // bool checkVeryCloseNeighbor (std::vector<Bord*>& Bords);
+    // std::vector<Bord*> getNeighbors (std::vector<Bord*>& Bords);
     float getDistanceFromBord (Bord *other);
-    void separation (std::vector<Bord*>& Bords);
-    void cohesion (std::vector<Bord*>& Bords);
-    void alignment (std::vector<Bord*>& Bords);
+    // void separation (std::vector<Bord*>& Bords);
+    // void cohesion (std::vector<Bord*>& Bords);
+    // void alignment (std::vector<Bord*>& Bords);
     float getPointsDistance (int *a, int *b);
     // operator implemented for std::find to work (used in main.cpp)
     bool operator== (const Bord& other) const;
