@@ -21,15 +21,18 @@ std::vector<Bord*> BordsCopy;
 */
 void enactGameRules () {
     // were gonna need two Bord Boards
-    std::cout << "rules are rules" << std::endl;
     // std::copy (Bords.begin(), Bords.end(), BordsCopy.begin());
-    BordsCopy = Bords;
-    for (Bord*& b : BordsCopy) {
-        b->cohesion(BordsCopy);
-        b->separation(BordsCopy);
-        b->alignment(BordsCopy);
+    // BordsCopy = Bords;
+    std::vector<Bord*> neighbors;
+    for (Bord*& b : Bords) {
+        if (neighbors = b->getNeighbors(Bords); neighbors.size() > 0) {
+            // b->cohesion(neighbors);
+            // b->separation(neighbors);
+            // std::cout << *b << std::endl;
+            b->alignment(neighbors);
+        }
     }
-    Bords = BordsCopy;
+    // Bords = BordsCopy;
     // std::copy (BordsCopy.begin(), BordsCopy.end(), Bords.begin());
 }
 
